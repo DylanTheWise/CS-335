@@ -6,9 +6,13 @@ package helloOpenGL;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 
+import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.*;
 import com.jogamp.opengl.glu.GLU;
+
 
 
 
@@ -114,6 +118,9 @@ public class JoglEventListener implements GLEventListener, KeyListener {
 	float rot; 
 	circle circleObject = new circle();
 	
+	FloatBuffer verticesBuf = Buffers.newDirectFloatBuffer(vertices);
+	IntBuffer indicesBuf = Buffers.newDirectIntBuffer(indices);
+	
 
     	private GLU glu = new GLU();
 
@@ -134,6 +141,7 @@ public class JoglEventListener implements GLEventListener, KeyListener {
 	        gl.glClearDepth(1.0f);                      // Depth Buffer Setup
 	        gl.glEnable(GL.GL_DEPTH_TEST);              // Enables Depth Testing
 	        gl.glDepthFunc(GL.GL_LEQUAL);               // The Type Of Depth Testing To Do
+	        
 	        // Really Nice Perspective Calculations
 	        //gl.glHint(GL.GL_PERSPECTIVE_CORRECTION_HINT, GL.GL_NICEST);  
 	    }
@@ -163,11 +171,28 @@ public class JoglEventListener implements GLEventListener, KeyListener {
 			
 			gl.glClearColor(backrgb[0], 0, 1, 1);
 			gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
+			gl.glEnableClientState (GL2.GL_VERTEX_ARRAY);
+			gl.glVertexPointer (3, GL.GL_FLOAT, 0, verticesBuf);
 
 			backrgb[0]+=0.0005;
 			if (backrgb[0]> 1) backrgb[0] = 0; 
 			
 			circleObject.DrawCircle(gLDrawable);
+				
+			/*int[] tempV = new int[50];
+			int[] tempB = new int[]{1,1};
+			
+			gl.glGenVertexArrays(1, IntBuffer.wrap(tempV));
+			int vao = tempV[0];
+			
+			gl.glGenBuffers(2, IntBuffer.wrap(tempB));
+			int vbo = tempB[0];
+			int ebo = tempB[1];
+			*/
+			
+			gl.glDrawElements(GL.GL_TRIANGLES, indices.length, GL.GL_UNSIGNED_INT, indicesBuf);
+			
+			
 			
 			// =============================================
 			// draw your content in this function
