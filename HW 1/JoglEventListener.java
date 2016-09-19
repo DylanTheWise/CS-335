@@ -6,10 +6,6 @@ package helloOpenGL;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
-
-import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.*;
 import com.jogamp.opengl.glu.GLU;
 
@@ -118,9 +114,6 @@ public class JoglEventListener implements GLEventListener, KeyListener {
 	float rot; 
 	circle circleObject = new circle();
 	
-	FloatBuffer verticesBuf = Buffers.newDirectFloatBuffer(vertices);
-	IntBuffer indicesBuf = Buffers.newDirectIntBuffer(indices);
-	
 
     	private GLU glu = new GLU();
 
@@ -171,38 +164,37 @@ public class JoglEventListener implements GLEventListener, KeyListener {
 			
 			gl.glClearColor(backrgb[0], 0, 1, 1);
 			gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
-			gl.glEnableClientState (GL2.GL_VERTEX_ARRAY);
-			gl.glVertexPointer (3, GL.GL_FLOAT, 0, verticesBuf);
+			//gl.glEnableClientState (GL2.GL_VERTEX_ARRAY);
+			//gl.glVertexPointer (3, GL.GL_FLOAT, 0, verticesBuf);
 
 			backrgb[0]+=0.0005;
 			if (backrgb[0]> 1) backrgb[0] = 0; 
 			
 			circleObject.DrawCircle(gLDrawable);
 				
-			/*int[] tempV = new int[50];
-			int[] tempB = new int[]{1,1};
 			
-			gl.glGenVertexArrays(1, IntBuffer.wrap(tempV));
-			int vao = tempV[0];
-			
-			gl.glGenBuffers(2, IntBuffer.wrap(tempB));
-			int vbo = tempB[0];
-			int ebo = tempB[1];
-			*/
-			
-			gl.glDrawElements(GL.GL_TRIANGLES, indices.length, GL.GL_UNSIGNED_INT, indicesBuf);
-			
-			
-			
-			// =============================================
-			// draw your content in this function
-			//
-			// =============================================
-	        // =============================================
+			gl.glBegin(GL.GL_TRIANGLES);
+			for(int i = 0; i < indices.length/4; i++)
+			{
+				gl.glBegin(GL.GL_TRIANGLES);
+				
+				int point1 = indices[i*4+1];    
+				float[] coords1 = {vertices[point1*3], vertices[point1*3+1]};
+				
+				int point2 = indices[i*4+2]; 
+				float[] coords2 = {vertices[point2*3], vertices[point2*3+1]};
+						
+				int point3 = indices[i*4+3];
+				float[] coords3 = {vertices[point3*3], vertices[point3*3+1]};
+				
+				gl.glVertex3f(coords1[0], coords1[1],-0.010798f);     
+				gl.glVertex3f(coords2[0], coords2[1], -0.010798f);  
+				gl.glVertex3f(coords3[0], coords3[1], -0.010798f); 
+				
+				gl.glEnd();
+				gl.glFlush();
+			}
 	       
-	       
-	       
-
 	        
 		}
 
@@ -245,10 +237,10 @@ public class JoglEventListener implements GLEventListener, KeyListener {
 			
 		}
 
-	  /*  
-	public void init(GLDrawable gLDrawable) {
-		final GL gl = glDrawable.getGL();
-        final GLU glu = glDrawable.getGLU();
+	  
+/*	public void init(GLDrawable gLDrawable) {
+		final GL gl = gLDrawable.getGL();
+        final GLU glu = gLDrawable.getGLU();
 
         gl.glMatrixMode(GL.GL_PROJECTION);
         gl.glLoadIdentity();

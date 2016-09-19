@@ -10,9 +10,9 @@ public class circle {
 	
 	public circle()
 	{
-		cx = 0.0f;
-		cy = 0.0f;
-		r = 10.0f;
+		cx = -10.0f;
+		cy = -10.0f;
+		r = 5.0f;
 		num_segments = 360;
 	}
 	
