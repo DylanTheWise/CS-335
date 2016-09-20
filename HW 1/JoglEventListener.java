@@ -179,17 +179,17 @@ public class JoglEventListener implements GLEventListener, KeyListener {
 				gl.glBegin(GL.GL_TRIANGLES);
 				
 				int point1 = indices[i*4+1];    
-				float[] coords1 = {vertices[point1*3], vertices[point1*3+1]};
+				float[] coords1 = {vertices[point1*3], vertices[point1*3+1], vertices[point1*3+2]};
 				
 				int point2 = indices[i*4+2]; 
-				float[] coords2 = {vertices[point2*3], vertices[point2*3+1]};
+				float[] coords2 = {vertices[point2*3], vertices[point2*3+1], vertices[point2*3+2]};
 						
 				int point3 = indices[i*4+3];
-				float[] coords3 = {vertices[point3*3], vertices[point3*3+1]};
+				float[] coords3 = {vertices[point3*3], vertices[point3*3+1], vertices[point3*3+2]};
 				
-				gl.glVertex3f(coords1[0], coords1[1],-0.010798f);     
-				gl.glVertex3f(coords2[0], coords2[1], -0.010798f);  
-				gl.glVertex3f(coords3[0], coords3[1], -0.010798f); 
+				gl.glVertex3f(coords1[0], coords1[1], coords1[2]);     
+				gl.glVertex3f(coords2[0], coords2[1], coords2[2]);  
+				gl.glVertex3f(coords3[0], coords3[1], coords3[2]); 
 				
 				gl.glEnd();
 				gl.glFlush();
