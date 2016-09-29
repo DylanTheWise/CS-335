@@ -121,7 +121,14 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	float tVal_x, tVal_y, rVal_x, rVal_y, rVal;
 	double rtMat[] = new double[16];
 	int mouseX0, mouseY0;
+	
+	float mouseXF, mouseYF, mousePointClickX, mousePointClickY, mousePointReleaseX, mousePointReleaseY;
+	float scaleFactor = 0.0f;
+	
 	int saveRTnow=0, mouseDragButton=0;
+	
+	//0 is scale, 1 is translate, 2 is rotate
+	int displayModificationState = 0;
 	
 	float focalLength = 10.0f;
 	float r11 = 1.0f, r12 = 0.0f, r13 = 0.0f, tx = 0.0f,
@@ -279,6 +286,36 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			// TODO Auto-generated method stub
 		    char key= e.getKeyChar();
 			System.out.printf("Key typed: %c\n", key); 
+					
+			if(key == 'g') {
+				//increase focal length
+				focalLength += 0.1f;
+			}
+			
+			if(key == 'h') {
+				//decrease focal length
+				focalLength -= 0.1f;
+			}
+			
+			if(key == 's') {
+				//scale object
+				displayModificationState = 0;
+			}
+			
+			if(key == 't') {
+				//translate object
+				displayModificationState = 1;
+			}
+			
+			if(key == 'r') {
+				//rotate object
+				displayModificationState = 2;
+			}
+			
+			if(key == '0') {
+				//reset object to defaults
+			}
+			
 		}
 
 		@Override
@@ -292,10 +329,7 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 
 		@Override
 		public void keyReleased(KeyEvent e) {
-			// TODO Auto-generated method stub
-			
-			
-				
+			// TODO Auto-generated method stub		
 			
 		}
 
@@ -305,7 +339,69 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			float XX = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
 			float YY = -(e.getY()-windowHeight*0.5f)*orthoX/windowWidth;
 			
+			System.out.printf("Point Dragged: (%.3f, %.3f)\n", XX, YY);
 			
+			float distanceChangedX = XX - mouseXF;
+			float distanceChangedY = YY - mouseYF;
+			
+			System.out.printf("Distance Between Points: (%.3f, %.3f)\n", distanceChangedX, distanceChangedY);
+			
+			mouseX0 = e.getX();
+			mouseY0 = e.getY();
+			
+			mouseXF = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
+			mouseYF = -(e.getY()-windowHeight*0.5f)*orthoX/windowWidth;
+			
+			//float tVal_x, tVal_y, rVal_x, rVal_y, rVal;
+			
+			scaleFactor = 0.0f;
+			
+			if (displayModificationState == 0)
+			{
+				if(distanceChangedX == 0 || distanceChangedY == 0)
+				{
+					scaleFactor += distanceChangedX;
+					scaleFactor += distanceChangedY;
+					
+					scaleFactor = (float) Math.sqrt( (float) Math.pow(scaleFactor, 2.0f)); 
+				}
+				
+				else
+				{
+					scaleFactor = (float) Math.sqrt(Math.pow(distanceChangedX, 2.0f) + Math.pow(distanceChangedY, 2.0f));
+				} 
+				
+				System.out.printf("Scale Factor: (%.3f)\n", scaleFactor);
+			}
+			
+			if(e.getButton()==MouseEvent.BUTTON1) {	// Left button
+				if (displayModificationState == 0)
+				{
+					if(distanceChangedX == 0 || distanceChangedY == 0)
+					{
+						scaleFactor += distanceChangedX;
+						scaleFactor += distanceChangedY;
+					}
+					
+					else
+					{
+						scaleFactor = (float) Math.sqrt(Math.pow(distanceChangedX, 2.0f) + Math.pow(distanceChangedY, 2.0f));
+					} 
+					
+					System.out.printf("Scale Factor: (%.3f)\n", scaleFactor);
+				}
+				
+				if (displayModificationState == 1)
+				{
+					
+				}
+				
+				if (displayModificationState == 2)
+				{
+					
+				}
+					
+			}
 			
 		}
 		
@@ -319,6 +415,27 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 		public void mouseClicked(MouseEvent e) {
 			// TODO Auto-generated method stub
 			
+			mouseX0 = e.getX();
+			mouseY0 = e.getY();
+			
+			if(e.getButton()==MouseEvent.BUTTON1) {	// Left button
+				if (displayModificationState == 0)
+				{
+					
+				}
+				
+				if (displayModificationState == 1)
+				{
+					
+				}
+				
+				if (displayModificationState == 2)
+				{
+					
+				}
+				
+			}
+			
 		}
 
 		@Override
@@ -329,11 +446,32 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			 */
 			float XX = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
 			float YY = -(e.getY()-windowHeight*0.5f)*orthoX/windowWidth;
+			mousePointClickX = XX;
+			mousePointClickY = YY;
+			
+			mouseXF = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
+			mouseYF = -(e.getY()-windowHeight*0.5f)*orthoX/windowWidth;
+			
 			System.out.printf("Point clicked: (%.3f, %.3f)\n", XX, YY);
 			
 			mouseX0 = e.getX();
 			mouseY0 = e.getY();
+			
 			if(e.getButton()==MouseEvent.BUTTON1) {	// Left button
+				if (displayModificationState == 0)
+				{
+					
+				}
+				
+				if (displayModificationState == 1)
+				{
+					
+				}
+				
+				if (displayModificationState == 2)
+				{
+					
+				}
 				
 			}
 			else if(e.getButton()==MouseEvent.BUTTON3) {	// Right button
@@ -343,6 +481,40 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 		@Override
 		public void mouseReleased(MouseEvent e) {
 			// TODO Auto-generated method stub
+			
+			float XX = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
+			float YY = -(e.getY()-windowHeight*0.5f)*orthoX/windowWidth;
+			mousePointReleaseX = XX;
+			mousePointReleaseY = YY;
+			
+			float distanceChangedX = XX - mouseXF;
+			float distanceChangedY = YY - mouseYF;
+			
+			mouseX0 = e.getX();
+			mouseY0 = e.getY();
+			
+			mouseXF = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
+			mouseYF = -(e.getY()-windowHeight*0.5f)*orthoX/windowWidth;
+			
+			System.out.printf("Point Released: (%.3f, %.3f)\n", XX, YY);
+			
+			if(e.getButton()==MouseEvent.BUTTON1) {	// Left button
+				if (displayModificationState == 0)
+				{
+					
+				}
+				
+				if (displayModificationState == 1)
+				{
+					
+				}
+				
+				if (displayModificationState == 2)
+				{
+					
+				}
+				
+			}
 			
 		}
 
