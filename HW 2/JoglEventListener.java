@@ -122,6 +122,8 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	double rtMat[] = new double[16];
 	int mouseX0, mouseY0;
 	
+	float[] vertices_new = new float[vertices.length];
+	
 	float mouseXF, mouseYF, mousePointClickX, mousePointClickY, mousePointReleaseX, mousePointReleaseY;
 	float scaleFactor = 0.0f;
 	
@@ -134,6 +136,10 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	float r11 = 1.0f, r12 = 0.0f, r13 = 0.0f, tx = 0.0f,
 	      r21 = 0.0f, r22 = 1.0f, r23 = 0.0f, ty = 0.0f,
 	      r31 = 0.0f, r32 = 0.0f, r33 = 1.0f, tz = 0.0f;
+	
+	float r11Original = 1.0f, r12Original = 0.0f, r13Original = 0.0f, txOriginal = 0.0f,
+		      r21Original = 0.0f, r22Original = 1.0f, r23Original = 0.0f, tyOriginal = 0.0f,
+		      r31Original = 0.0f, r32Original = 0.0f, r33Original = 1.0f, tzOriginal = 0.0f;
 
     private GLU glu = new GLU();
 
@@ -216,6 +222,24 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	    	// perform your transformation
 	    
 	    	int length = vertices_in.length;
+	    	
+	    	if (displayModificationState == 0)
+			{
+				r11 = 1.0f*scaleFactor;
+				r22 = 1.0f*scaleFactor;
+				r33 = 1.0f*scaleFactor;
+			}
+	    	
+	    	if (displayModificationState == 1)
+			{
+				
+			}
+	    	
+	    	if (displayModificationState == 2)
+			{
+				
+			}
+	    	
 	    	float[] transformMatrix = 
 		    	{
 		    	   r11, r12, r13, tx,
@@ -224,7 +248,21 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 		    	   0,   0,   0, 1
 		    	};
 	    	
-
+	    	for(int i = 0; i < vertices_in.length; i += 3){
+	    		float tempZ = vertices_in[i+2] + 10;  // this translation in Z is needed to pull the camera away from the object. 
+	    		// don't change the above line unless you are sure about what you are doing.
+	    		
+	    		vertices_out[i] = (transformMatrix[0] * vertices_in[i] + transformMatrix[1] * vertices_in[i + 1] + transformMatrix[2] * tempZ + transformMatrix[3]);
+	    		vertices_out[i + 1] = transformMatrix[4] * vertices_in[i] + transformMatrix[5] * vertices_in[i + 1] + transformMatrix[6] * tempZ+ transformMatrix[7];
+	    		vertices_out[i + 2] = transformMatrix[8] * vertices_in[i] + transformMatrix[9] * vertices_in[i + 1] + transformMatrix[10] * tempZ+ transformMatrix[11];
+	    	   
+	    		float temp = transformMatrix[12] * vertices_in[i] + transformMatrix[13] * vertices_in[i + 1] + transformMatrix[14] * tempZ+ transformMatrix[15];
+	    	   
+	    	    vertices_out[i]   = vertices_out[i]   / temp;
+	    	    vertices_out[i+1] = vertices_out[i+1] / temp;
+	    	    vertices_out[i+2] = vertices_out[i+2] / temp;
+    	
+	    	}
 	    	
 	    }
 
@@ -240,10 +278,10 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	    	gl.glMatrixMode(GL2.GL_MODELVIEW);
 	    	gl.glLoadIdentity();
 	 	
-			float[] vertices_new = new float[vertices.length];
+			//float[] vertices_new = new float[vertices.length];
 
 			// call the transform function here
-			// transform(...)
+			transform(vertices, vertices_new);
 		
 			
 			project(vertices, vertices_new);
@@ -341,10 +379,12 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			
 			System.out.printf("Point Dragged: (%.3f, %.3f)\n", XX, YY);
 			
-			float distanceChangedX = XX - mouseXF;
-			float distanceChangedY = YY - mouseYF;
+			//float distanceChangedX = XX - mouseXF;
+			//float distanceChangedY = YY - mouseYF;
+			int distanceChangedX = Math.round(XX) - mouseX0/1000;
+			int distanceChangedY = Math.round(YY) - mouseY0/1000;
 			
-			System.out.printf("Distance Between Points: (%.3f, %.3f)\n", distanceChangedX, distanceChangedY);
+			System.out.printf("Distance Between Points: (%d, %d)\n", distanceChangedX, distanceChangedY);
 			
 			mouseX0 = e.getX();
 			mouseY0 = e.getY();
@@ -389,6 +429,8 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 					} 
 					
 					System.out.printf("Scale Factor: (%.3f)\n", scaleFactor);
+					
+					
 				}
 				
 				if (displayModificationState == 1)
@@ -449,13 +491,16 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			mousePointClickX = XX;
 			mousePointClickY = YY;
 			
-			mouseXF = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
-			mouseYF = -(e.getY()-windowHeight*0.5f)*orthoX/windowWidth;
+			//mouseXF = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
+			//mouseYF = -(e.getY()-windowHeight*0.5f)*orthoX/windowWidth;
 			
 			System.out.printf("Point clicked: (%.3f, %.3f)\n", XX, YY);
 			
 			mouseX0 = e.getX();
 			mouseY0 = e.getY();
+			
+			int distanceChangedX = Math.round(XX) - mouseX0/1000;
+			int distanceChangedY = Math.round(YY) - mouseY0/1000;
 			
 			if(e.getButton()==MouseEvent.BUTTON1) {	// Left button
 				if (displayModificationState == 0)
@@ -487,14 +532,14 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			mousePointReleaseX = XX;
 			mousePointReleaseY = YY;
 			
-			float distanceChangedX = XX - mouseXF;
-			float distanceChangedY = YY - mouseYF;
-			
 			mouseX0 = e.getX();
 			mouseY0 = e.getY();
 			
-			mouseXF = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
-			mouseYF = -(e.getY()-windowHeight*0.5f)*orthoX/windowWidth;
+			int distanceChangedX = Math.round(XX) - mouseX0;
+			int distanceChangedY = Math.round(YY) - mouseY0;
+			
+			//mouseXF = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
+			//mouseYF = -(e.getY()-windowHeight*0.5f)*orthoX/windowWidth;
 			
 			System.out.printf("Point Released: (%.3f, %.3f)\n", XX, YY);
 			
@@ -543,6 +588,3 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
     }*/
 	
 }
-
-
-
