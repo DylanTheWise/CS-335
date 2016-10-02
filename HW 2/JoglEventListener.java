@@ -125,7 +125,7 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	float[] vertices_new = new float[vertices.length];
 	
 	float mouseXF, mouseYF, mousePointClickX, mousePointClickY, mousePointReleaseX, mousePointReleaseY;
-	float scaleFactor = 0.0f;
+	float scaleFactor = 1.0f;
 	
 	int saveRTnow=0, mouseDragButton=0;
 	
@@ -225,9 +225,9 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	    	
 	    	if (displayModificationState == 0)
 			{
-				r11 = 1.0f*scaleFactor;
-				r22 = 1.0f*scaleFactor;
-				r33 = 1.0f*scaleFactor;
+				r11 = r11*scaleFactor;
+				r22 = r22*scaleFactor;
+				r33 = r33*scaleFactor;
 			}
 	    	
 	    	if (displayModificationState == 1)
@@ -278,13 +278,15 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	    	gl.glMatrixMode(GL2.GL_MODELVIEW);
 	    	gl.glLoadIdentity();
 	 	
-			//float[] vertices_new = new float[vertices.length];
+			float[] vertices_new = new float[vertices.length];
 
 			// call the transform function here
 			transform(vertices, vertices_new);
-		
 			
-			project(vertices, vertices_new);
+			float[] vertices_new2 = vertices_new;
+			vertices_new = new float[vertices.length];
+			
+			project(vertices_new2, vertices_new);
 	        
 			gl.glBegin(GL.GL_TRIANGLES);        // Drawing Using Triangles
         	for(int i=0; i<44; i++) {
@@ -299,6 +301,8 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
         		gl.glVertex3f(vertices_new[(indices[i*4+3])*3],
         				vertices_new[(indices[i*4+3])*3+1],
         				vertices_new[(indices[i*4+3])*3+2]);
+        		
+        		//vertices = vertices_new;
         		
         		/*gl.glVertex3f(vertices[(indices[i*4+1])*3],
         					  vertices[(indices[i*4+1])*3+1],
@@ -379,12 +383,12 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			
 			System.out.printf("Point Dragged: (%.3f, %.3f)\n", XX, YY);
 			
-			//float distanceChangedX = XX - mouseXF;
-			//float distanceChangedY = YY - mouseYF;
-			int distanceChangedX = Math.round(XX) - mouseX0/1000;
-			int distanceChangedY = Math.round(YY) - mouseY0/1000;
+			float distanceChangedX = XX - mouseXF;
+			float distanceChangedY = YY - mouseYF;
+			//int distanceChangedX = Math.round(XX) - mouseX0/1000;
+			//int distanceChangedY = Math.round(YY) - mouseY0/1000;
 			
-			System.out.printf("Distance Between Points: (%d, %d)\n", distanceChangedX, distanceChangedY);
+			System.out.printf("Distance Between Points: (%.3f, %.3f)\n", distanceChangedX, distanceChangedY);
 			
 			mouseX0 = e.getX();
 			mouseY0 = e.getY();
@@ -409,7 +413,15 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 				else
 				{
 					scaleFactor = (float) Math.sqrt(Math.pow(distanceChangedX, 2.0f) + Math.pow(distanceChangedY, 2.0f));
-				} 
+					
+				}
+				
+				if (distanceChangedX < 0 || distanceChangedY < 0)
+				{
+					scaleFactor = scaleFactor*-1.0f;
+				}
+				
+				scaleFactor = ScaleFactorLogic(scaleFactor);
 				
 				System.out.printf("Scale Factor: (%.3f)\n", scaleFactor);
 			}
@@ -417,10 +429,11 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			if(e.getButton()==MouseEvent.BUTTON1) {	// Left button
 				if (displayModificationState == 0)
 				{
-					if(distanceChangedX == 0 || distanceChangedY == 0)
+					/*if(distanceChangedX == 0 || distanceChangedY == 0)
 					{
 						scaleFactor += distanceChangedX;
 						scaleFactor += distanceChangedY;
+						scaleFactor = scaleFactor/10;
 					}
 					
 					else
@@ -430,7 +443,7 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 					
 					System.out.printf("Scale Factor: (%.3f)\n", scaleFactor);
 					
-					
+					*/
 				}
 				
 				if (displayModificationState == 1)
@@ -491,6 +504,9 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			mousePointClickX = XX;
 			mousePointClickY = YY;
 			
+			mouseXF = XX;
+			mouseYF = YY;
+			
 			//mouseXF = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
 			//mouseYF = -(e.getY()-windowHeight*0.5f)*orthoX/windowWidth;
 			
@@ -499,8 +515,10 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			mouseX0 = e.getX();
 			mouseY0 = e.getY();
 			
-			int distanceChangedX = Math.round(XX) - mouseX0/1000;
-			int distanceChangedY = Math.round(YY) - mouseY0/1000;
+			//int distanceChangedX = Math.round(XX) - mouseX0/1000;
+			//int distanceChangedY = Math.round(YY) - mouseY0/1000;
+			float distanceChangedX = XX - mouseXF;
+			float distanceChangedY = YY - mouseYF;
 			
 			if(e.getButton()==MouseEvent.BUTTON1) {	// Left button
 				if (displayModificationState == 0)
@@ -529,31 +547,22 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			
 			float XX = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
 			float YY = -(e.getY()-windowHeight*0.5f)*orthoX/windowWidth;
-			mousePointReleaseX = XX;
-			mousePointReleaseY = YY;
-			
-			mouseX0 = e.getX();
-			mouseY0 = e.getY();
-			
-			int distanceChangedX = Math.round(XX) - mouseX0;
-			int distanceChangedY = Math.round(YY) - mouseY0;
-			
-			//mouseXF = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
-			//mouseYF = -(e.getY()-windowHeight*0.5f)*orthoX/windowWidth;
 			
 			System.out.printf("Point Released: (%.3f, %.3f)\n", XX, YY);
 			
-			if(e.getButton()==MouseEvent.BUTTON1) {	// Left button
-				if (displayModificationState == 0)
-				{
-					
-				}
+			if (displayModificationState == 0)
+			{
+				scaleFactor = 1.0f;
+			}
+			
+			
+			if (displayModificationState == 1)
+			{
 				
-				if (displayModificationState == 1)
-				{
-					
-				}
-				
+			}
+			
+			if(e.getButton()==MouseEvent.BUTTON1) 
+			{	// Left button	
 				if (displayModificationState == 2)
 				{
 					
@@ -575,6 +584,32 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			
 		}
 
+		public float ScaleFactorLogic(float scaleFactor)
+		{
+			if(scaleFactor >= 1.5f)
+			{
+				scaleFactor = 1.01f;
+			}
+			
+			else if (scaleFactor < 1.5 && scaleFactor > 0)
+			{
+				scaleFactor = 1.01f;
+			}
+			
+			else if (scaleFactor < 0 && scaleFactor > -1.5f)
+			{
+				
+				scaleFactor = 0.99f;
+
+			}
+			
+			else if (scaleFactor <= -1.5f)
+			{
+				scaleFactor = 0.99f;
+			}
+			
+			return scaleFactor;
+		}
 	  /*  
 	public void init(GLDrawable gLDrawable) {
 		final GL gl = glDrawable.getGL();
