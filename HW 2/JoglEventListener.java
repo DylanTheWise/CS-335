@@ -125,6 +125,11 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	float translateX = 0.0f;
 	float translateY = 0.0f;
 	float translateZ = 0.0f;
+	float rotateX = 0.0f;
+	float rotateY = 0.0f;
+	float rotateZ = 0.0f;
+	
+	int doZrotation = 0;
 	
 	float[] vertices_new = new float[vertices.length];
 	
@@ -134,7 +139,7 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	int saveRTnow=0, mouseDragButton=0;
 	
 	//0 is scale, 1 is translate, 2 is rotate
-	int displayModificationState = 0;
+	int displayModificationState = 2;
 	
 	float focalLength = 10.0f;
 	float r11 = 1.0f, r12 = 0.0f, r13 = 0.0f, tx = 0.0f,
@@ -236,14 +241,58 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	    	
 	    	if (displayModificationState == 1)
 			{
-				tx = tx + translateX;
-				ty = ty + translateY;
-				tz = tz + translateZ;
+				tx = tx + translateX*5.0f;
+				ty = ty + translateY*5.0f;
+				tz = tz + translateZ*5.0f;
 			}
 	    	
 	    	if (displayModificationState == 2)
 			{
+	    		if (doZrotation == 1)
+	    		{
+	    			float rotationAngleX = (float) (rotateX/0.068f);
+		    		if(rotateX != 0.0f)
+		    		{
+		    			System.out.print(rotationAngleX);
+		    			r11 = 1.0f;
+		    			
+		    			r22 = (float) Math.cos(rotationAngleX);
+						r23 = (float) Math.sin(rotationAngleX) * -1.0f;
+					
+						r32 = (float) Math.sin(rotationAngleX);
+						r33 = (float) Math.cos(rotationAngleX);
+		    		}
+	    		}
+	    		
+	    		float rotationAngleY = (float) (rotateY/0.068f);
+	    		if(rotateY != 0.0f)
+	    		{
+	    			
+	    			if(doZrotation == 0)
+	    			{
+	    				System.out.print(rotationAngleY);
+	    				r33 = r33*1.0f;
+	    			
+	    				r11 = (float) Math.cos(rotationAngleY) * r11;
+	    				r12 = (float) Math.sin(rotationAngleY) * -1.0f;
 				
+	    				r21 = (float) Math.sin(rotationAngleY);
+	    				r22 = (float) Math.cos(rotationAngleY) * r22;
+	    			}
+	    			
+	    			else if (doZrotation == 1)
+	    			{
+	    				System.out.print(rotationAngleY);
+	    				r22 = r22*1.0f;
+	    			
+	    				r11 = (float) Math.cos(rotationAngleY) * r11;
+	    				r13 = (float) Math.sin(rotationAngleY);
+				
+	    				r31 = (float) Math.sin(rotationAngleY) * -1.0f;
+	    				r33 = (float) Math.cos(rotationAngleY) * r33;
+	    			}
+	    		}
+	    		
 			}
 	    	
 	    	float[] transformMatrix = 
@@ -308,6 +357,10 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
         				vertices_new[(indices[i*4+3])*3+1],
         				vertices_new[(indices[i*4+3])*3+2]);
         		
+        		
+        	translateX = 0.0f;
+        	translateY = 0.0f;
+        	translateZ = 0.0f;
         		//vertices = vertices_new;
         		
         		/*gl.glVertex3f(vertices[(indices[i*4+1])*3],
@@ -439,6 +492,12 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 				translateZ = 0.0f;
 			}
 			
+			if (displayModificationState == 2)
+			{
+				rotateX = distanceChangedX;
+				rotateY = distanceChangedY;
+			}
+			
 			if(e.getButton()==MouseEvent.BUTTON1) {	// Left button
 				if (displayModificationState == 0)
 				{
@@ -508,24 +567,19 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			
 			
 			if(e.getButton()==MouseEvent.BUTTON1) {	// Left button
-				if (displayModificationState == 0)
-				{
-					
-				}
-				
-				if (displayModificationState == 1)
-				{
-					
-				}
-				
 				if (displayModificationState == 2)
 				{
-					
+					doZrotation = 1;
 				}
 				
 			}
-			else if(e.getButton()==MouseEvent.BUTTON3) {	// Right button
-							}
+			else if(e.getButton()==MouseEvent.BUTTON3) 
+			{	// Right button
+				if (displayModificationState == 2)
+				{
+					doZrotation = 0;
+				}
+			}
 		}
 
 		@Override
@@ -548,6 +602,13 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 				translateX = 0.0f;
 				translateY = 0.0f;
 				translateZ = 0.0f;
+			}
+			
+			if (displayModificationState == 2)
+			{
+				rotateX = 0.0f;
+				rotateY = 0.0f;
+				rotateZ = 0.0f;
 			}
 			
 			if(e.getButton()==MouseEvent.BUTTON1) 
