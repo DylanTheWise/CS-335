@@ -113,6 +113,8 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	float backrgb[] = new float[4]; 
 	float rot; 
 	
+	float [] verticesBase = vertices;
+	
 	/*
 	 * Custom variables for mouse drag operations 
 	 */
@@ -139,7 +141,7 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	int saveRTnow=0, mouseDragButton=0;
 	
 	//0 is scale, 1 is translate, 2 is rotate
-	int displayModificationState = 2;
+	int displayModificationState = 0;
 	
 	float focalLength = 10.0f;
 	float r11 = 1.0f, r12 = 0.0f, r13 = 0.0f, tx = 0.0f,
@@ -250,11 +252,11 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			{
 	    		if (doZrotation == 1)
 	    		{
-	    			float rotationAngleX = (float) (rotateX/0.068f);
+	    			float rotationAngleX = (float) (rotateX/0.068f)/100;
 		    		if(rotateX != 0.0f)
 		    		{
-		    			System.out.print(rotationAngleX);
-		    			r11 = 1.0f;
+		    			//System.out.print(rotationAngleX);
+		    			r11 = 1.0f;	    			
 		    			
 		    			r22 = (float) Math.cos(rotationAngleX);
 						r23 = (float) Math.sin(rotationAngleX) * -1.0f;
@@ -264,15 +266,15 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 		    		}
 	    		}
 	    		
-	    		float rotationAngleY = (float) (rotateY/0.068f);
+	    		float rotationAngleY = (float) (rotateY/0.068f)/100;
 	    		if(rotateY != 0.0f)
 	    		{
 	    			
 	    			if(doZrotation == 0)
 	    			{
-	    				System.out.print(rotationAngleY);
+	    				//System.out.print(rotationAngleY);
 	    				r33 = r33*1.0f;
-	    			
+	    				
 	    				r11 = (float) Math.cos(rotationAngleY) * r11;
 	    				r12 = (float) Math.sin(rotationAngleY) * -1.0f;
 				
@@ -282,18 +284,36 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	    			
 	    			else if (doZrotation == 1)
 	    			{
-	    				System.out.print(rotationAngleY);
+	    				//System.out.print(rotationAngleY);
 	    				r22 = r22*1.0f;
-	    			
-	    				r11 = (float) Math.cos(rotationAngleY) * r11;
+	    				
+	    				r11 = (float) Math.cos(rotationAngleY);
 	    				r13 = (float) Math.sin(rotationAngleY);
 				
 	    				r31 = (float) Math.sin(rotationAngleY) * -1.0f;
-	    				r33 = (float) Math.cos(rotationAngleY) * r33;
+	    				r33 = (float) Math.cos(rotationAngleY);
 	    			}
 	    		}
 	    		
 			}
+	    	
+	    	if(displayModificationState == 3)
+    		{
+	    		r11 = 1.0f;
+	    		r12 = 0.0f;
+	    		r13 = 0.0f;
+	    		tx = 0.0f;
+	    		
+	    		r21 = 0.0f;
+	    		r22 = 1.0f; 
+	    		r23 = 0.0f;
+	    		ty = 0.0f;
+	    		
+	    		r31 = 0.0f; 
+	    		r32 = 0.0f;
+	    		r33 = 1.0f;
+	    		tz = 0.0f;
+    		}
 	    	
 	    	float[] transformMatrix = 
 		    	{
@@ -302,8 +322,11 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 		    	   r31, r32, r33, tz,
 		    	   0,   0,   0, 1
 		    	};
+	
 	    	
-	    	for(int i = 0; i < vertices_in.length; i += 3){
+	    	for(int i = 0; i < vertices_in.length; i += 3)
+	    	{
+	    		
 	    		float tempZ = vertices_in[i+2] + 10;  // this translation in Z is needed to pull the camera away from the object. 
 	    		// don't change the above line unless you are sure about what you are doing.
 	    		
@@ -415,6 +438,8 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			
 			if(key == '0') {
 				//reset object to defaults
+				vertices = verticesBase;
+				displayModificationState = 3;
 			}
 			
 		}
