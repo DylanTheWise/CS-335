@@ -27,7 +27,7 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	float orthoX=40;
 
 	int mouseX0, mouseY0;	
-	float picked_x = 0.0f, picked_y = 0.0f;
+	float XX = 0.0f, YY = 0.0f;
 	
 	float focalLength = 15.0f;
 	
@@ -74,6 +74,7 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	float earthXCoord = 0.0f;
 	float earthYCoord = 0.0f;
 	float inclinationAngle = 0.0f;
+	float mouseXF, mouseYF;
 	
 	
 	float blankMaterial[]     = { 0.0f, 0.0f, 0.0f }; //set the material to black
@@ -84,6 +85,7 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	
 	boolean diffuse_flag  = false;
 	boolean specular_flag = false;
+	boolean animationBool = true;
 	
 	boolean smooth_flag = true;
 
@@ -219,13 +221,17 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			
 	    	gl.glMatrixMode(GL2.GL_MODELVIEW);
 	    	gl.glLoadIdentity();
+	    	
+	    	if (animationBool)
+	    	{
 			
-			globalRotation += 5;
-			
-			if (globalRotation >= 360)
-			{
-				globalRotation = 0;
-			}
+				globalRotation += 5;
+				
+				if (globalRotation >= 360)
+				{
+					globalRotation = 0;
+				}
+	    	}
 			
 			
 			glu.gluLookAt(0.0, 0.0, focalLength, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0); // eye point, x, y, z, looking at x, y, z, Up direction 
@@ -281,13 +287,37 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 
 			case 'g':
 			case 'G':
-				focalLength += 5;
+				focalLength += 1;
 				
 				break;
 				
 			case 'h':
 			case 'H':
-				focalLength -= 5;
+				focalLength -= 1;
+				
+			case 't':
+				if (animationBool == true)
+				{
+					animationBool = false;
+				}
+				
+				else if (animationBool == false)
+				{
+					animationBool = true;
+				}
+				
+				break;
+				
+			case 'T':
+				if (animationBool == true)
+				{
+					animationBool = false;
+				}
+				
+				else if (animationBool == false)
+				{
+					animationBool = true;
+				}
 				
 				break;
 				
@@ -320,6 +350,43 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			float XX = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
 			float YY = -(e.getY()-windowHeight*0.5f)*orthoX/windowHeight;
 			
+			float distanceChangedX = XX - mouseXF;
+			float distanceChangedY = YY - mouseYF;
+			
+			mouseXF = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
+			mouseYF = -(e.getY()-windowHeight*0.5f)*orthoX/windowWidth;
+			
+			if(e.getButton() == MouseEvent.BUTTON1)
+			{
+				if (distanceChangedX > 0)
+				{
+					rotateAngle += 10.0f;
+					if(rotateAngle >= 360.0f)
+						rotateAngle -= 360.0f;
+				}
+				
+				else if (distanceChangedX < 0)
+				{
+					rotateAngle -= 10.0f;
+					if(rotateAngle <= 0)
+						rotateAngle += 360;
+				}
+			}
+			
+			
+			if(e.getButton() == MouseEvent.BUTTON2)
+			{
+				if (distanceChangedY > 0)
+				{
+					focalLength += 1;
+				}
+				
+				else if (distanceChangedY < 0)
+				{
+					focalLength -= 1;
+				}
+			}
+			
 			
 		}
 		
@@ -341,13 +408,16 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			/*
 			 * Coordinates printout
 			 */
-			picked_x = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
-			picked_y = -(e.getY()-windowHeight*0.5f)*orthoX/windowHeight;
+			XX = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
+			YY = -(e.getY()-windowHeight*0.5f)*orthoX/windowHeight;
 			
-			System.out.printf("Point clicked: (%.3f, %.3f)\n", picked_x, picked_y);
+			System.out.printf("Point clicked: (%.3f, %.3f)\n", XX, YY);
 			
 			mouseX0 = e.getX();
 			mouseY0 = e.getY();
+			
+			mouseXF = XX;
+			mouseYF = YY;
 			
 			if(e.getButton()==MouseEvent.BUTTON1) {	// Left button
 				
