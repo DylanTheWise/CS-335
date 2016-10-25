@@ -11,6 +11,7 @@ import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLEventListener;
+import com.jogamp.opengl.fixedfunc.GLMatrixFunc;
 import com.jogamp.opengl.glu.GLU;
 import com.jogamp.opengl.util.gl2.GLUT;
 
@@ -66,9 +67,9 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	float whiteMoonColor [] = {254.0f/255.0f, 252.0f/255.0f, 215.0f/255.0f};
 	float whiteMoonColorDark [] = {204.0f/255.0f, 202.0f/255.0f, 165.0f/255.0f};
 	
-	float blackShadowColor [] = {0.0f, 0.0f, 0.0f};
+	float blackShadowColor [] = {0.05f, 0.05f, 0.05f};
 	
-	float globalRotation = 0.0f;
+	int globalRotation = 0;
 	float rotateMoon = 0.0f;
 	float earthXCoord = 0.0f;
 	float earthYCoord = 0.0f;
@@ -77,7 +78,7 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	
 	float blankMaterial[]     = { 0.0f, 0.0f, 0.0f }; //set the material to black
 	float grayMaterial[]     = { 0.7f, 0.7f, 0.7f }; //set the material to gray
-	float mShininess[]        = { 5 }; //set the shininess of the material
+	float mShininess[]        = { 10 }; //set the shininess of the material
 
 	
 	
@@ -91,39 +92,20 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
     private GLUT glut = new GLUT();
 	
 	public void drawSun(final GL2 gl){
-		gl.glPushMatrix();
-		
-		//gl.glDisable(GL2.GL_SPECULAR);
-		
-		// set the shading model GL_SMOOTH /GL_FLAT
-		if(smooth_flag){
-			gl.glShadeModel(GL2.GL_SMOOTH);
-		}
-		else{
-			gl.glShadeModel(GL2.GL_FLAT);
-		}
-		
 		//float ambientLight[] = {alr, alg, alb}; // ambient light property
 		float mSunShininess[]        = { 1 };
 		
 		// set the material property
-		gl.glMaterialfv(GL2.GL_FRONT_AND_BACK, GL2.GL_AMBIENT, yellowSunColor, 0);
-		gl.glMaterialfv(GL2.GL_FRONT_AND_BACK, GL2.GL_SPECULAR, yellowSunColor, 0);
-		gl.glMaterialfv(GL2.GL_FRONT_AND_BACK, GL2.GL_SHININESS, mSunShininess, 0);	
-		gl.glMaterialfv(GL2.GL_FRONT_AND_BACK, GL2.GL_DIFFUSE, yellowSunColor, 0);
-	
-		
-		
+		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_AMBIENT, yellowSunColor, 0);
+		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_SPECULAR, yellowSunColor, 0);
+		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_SHININESS, mSunShininess, 0);	
+		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_DIFFUSE, yellowSunColor, 0);
+			
 		glut.glutSolidSphere(1, 360, 360);
-		
-		//gl.glEnable(GL2.GL_SPECULAR);
-		
-		gl.glPopMatrix();
-		
 	}
 	
 	public void drawEarth(final GL2 gl){	
-		
+		gl.glPushMatrix();
 		//System.out.printf("%f\n",globalRotation);
 		earthXCoord = (float) (5.0f * Math.cos(globalRotation));
 		earthYCoord = (float) (Math.sin(12.0f));
@@ -133,70 +115,49 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 		gl.glRotatef(globalRotation, 0.0f, 1.0f, 0.0f);
 		gl.glTranslatef(5.0f, 0.0f, 0.0f);
 		
-		gl.glPushMatrix();
-		
-		// set the shading model GL_SMOOTH /GL_FLAT
-		if(smooth_flag){
-			gl.glShadeModel(GL2.GL_SMOOTH);
-		}
-		else{
-			gl.glShadeModel(GL2.GL_FLAT);
-		}
-		
-		//gl.glTranslatef(5.0f, 0.0f, 0.0f);
-		//gl.glRotatef(12.0f, 1.0f, 0.0f, 0.0f);
-		
 		// set the material property
-		gl.glMaterialfv(GL2.GL_FRONT_AND_BACK, GL2.GL_AMBIENT, blueEarthColorDark, 0);
-		gl.glMaterialfv(GL2.GL_FRONT_AND_BACK, GL2.GL_SPECULAR, blueEarthColor, 0);
-		gl.glMaterialfv(GL2.GL_FRONT_AND_BACK, GL2.GL_SHININESS, mShininess, 0);	
-		gl.glMaterialfv(GL2.GL_FRONT_AND_BACK, GL2.GL_DIFFUSE, blueEarthColor, 0);
+		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_AMBIENT, blackShadowColor, 0);
+		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_SPECULAR, blueEarthColor, 0);
+		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_SHININESS, mShininess, 0);	
+		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_DIFFUSE, blueEarthColor, 0);
+		gl.glColorMaterial(gl.GL_FRONT, gl.GL_DIFFUSE);
+		gl.glEnable(gl.GL_COLOR_MATERIAL);
 		
 		glut.glutSolidSphere(1.0f/3.0f, 360, 360);
-		//glut.glutSolidSphere(1.0f, 360, 360);
 		
 		gl.glPopMatrix();
 		
 	}
 	
 	public void drawMoon(final GL2 gl){
-		
-		gl.glRotatef(rotateMoon, earthXCoord, 0.0f, 0.0f);
-		
-		System.out.printf("%f\n",rotateMoon);
-		
-		//gl.glRotatef(rotateMoon, 0.0f, earthXCoord, 0.0f);
-		//gl.glRotatef(globalRotation, 0.0f, 1.0f, 0.0f);
-		//gl.glRotatef(12.0f, earthYCoord, 0.0f, 0.0f);
-
 		gl.glPushMatrix();
 		
-		// set the shading model GL_SMOOTH /GL_FLAT
-		if(smooth_flag){
-			gl.glShadeModel(GL2.GL_SMOOTH);
-		}
-		else{
-			gl.glShadeModel(GL2.GL_FLAT);
+		gl.glRotatef(12.0f, 1.0f, 0.0f, 0.0f);
+		gl.glRotatef(globalRotation, 0.0f, 1.0f, 0.0f);
+		gl.glTranslatef(5.0f, 0.0f, 0.0f);
+		
+		if (earthXCoord < 0.0f)
+		{
+			earthXCoord = earthXCoord * -1.0f;
 		}
 		
+		gl.glRotatef(12.0f, earthXCoord, 0.0f, 0.0f);
+		gl.glRotatef (globalRotation, 0.0f, earthXCoord, 0.0f);
 		gl.glTranslatef(1.0f, 0.0f, 0.0f);
+		
 		// set the material property
-		gl.glMaterialfv(GL2.GL_FRONT_AND_BACK, GL2.GL_AMBIENT, whiteMoonColorDark, 0);
-		gl.glMaterialfv(GL2.GL_FRONT_AND_BACK, GL2.GL_SPECULAR, whiteMoonColor, 0);
-		gl.glMaterialfv(GL2.GL_FRONT_AND_BACK, GL2.GL_SHININESS, mShininess, 0);	
-		gl.glMaterialfv(GL2.GL_FRONT_AND_BACK, GL2.GL_DIFFUSE, whiteMoonColor, 0);
+		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_AMBIENT, blackShadowColor, 0);
+		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_SPECULAR, whiteMoonColor, 0);
+		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_SHININESS, mShininess, 0);	
+		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_DIFFUSE, whiteMoonColor, 0);
+		gl.glColorMaterial(gl.GL_FRONT, gl.GL_DIFFUSE);
+		gl.glEnable(gl.GL_COLOR_MATERIAL);
 		
 		glut.glutSolidSphere(1.0f/9.0f, 360, 360);
 		
 		gl.glPopMatrix();
 		
-		gl.glTranslatef(1.0f, 0.0f, 0.0f);
-		gl.glRotatef(rotateMoon, earthXCoord, 0.0f, 0.0f);
-		
-		
 	}
-		
-
 	
 	    public void displayChanged(GLAutoDrawable gLDrawable, boolean modeChanged, boolean deviceChanged) {
 		 
@@ -216,9 +177,9 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	        // Really Nice Perspective Calculations
 	        //gl.glHint(GL.GL_PERSPECTIVE_CORRECTION_HINT, GL.GL_NICEST);
 	        
-	        gl.glEnable(GL2.GL_LIGHTING); // enable lighting
+	        //gl.glEnable(GL2.GL_LIGHTING); // enable lighting
 	        
-	        gl.glEnable(GL2.GL_LIGHT0); // enable light0
+	        //gl.glEnable(GL2.GL_LIGHT0); // enable light0
 	       // gl.glEnable(GL2.GL_LIGHT1); 
 	        gl.glMatrixMode(GL2.GL_MODELVIEW);
 	        gl.glLoadIdentity();
@@ -258,33 +219,12 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			
 	    	gl.glMatrixMode(GL2.GL_MODELVIEW);
 	    	gl.glLoadIdentity();
-	    	
-			float diffuseLight[] = {dlr, dlg, dlb}; // diffuse light property
-			float ambientLight[] = {alr, alg, alb}; // ambient light property
 			
-			float ligthtPosition_0[] = {lx_0, ly_0, lz_0, lw_0}; // light position
-			gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_DIFFUSE, diffuseLight, 0); // set light0 as diffuse light with related property
-			//gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_DIFFUSE, ambientLight, 0);
-			gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_POSITION, ligthtPosition_0, 0); // set light0 position
-			gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_SPECULAR, whiteSpecularLight, 0);
+			globalRotation += 5;
 			
-			//gl.glLightf(GL2.GL_LIGHT0, GL2.GL_CONSTANT_ATTENUATION, 1.0f);
-			//gl.glLightf(GL2.GL_LIGHT0, GL2.GL_LINEAR_ATTENUATION, 0.5f);
-			//gl.glLightf(GL2.GL_LIGHT0, GL2.GL_QUADRATIC_ATTENUATION, 0.1f);
-			
-			
-			globalRotation += 3.0f;
-			
-			if (globalRotation >= 360.0f)
+			if (globalRotation >= 360)
 			{
-				globalRotation = 0.0f;
-			}
-			
-			rotateMoon += 5.0f;
-			
-			if (rotateMoon >= 360.0f)
-			{
-				rotateMoon = 0.0f;
+				globalRotation = 0;
 			}
 			
 			
@@ -292,13 +232,22 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	    	
 			gl.glRotatef(rotateAngle, 0.0f, 1.0f, 0.0f);
 			
-			//rotateAngle += 3.0f;
-
-	    	drawSun(gl);
+			
+			drawSun(gl);
 
 	    	drawEarth(gl);
 	    	
 	    	drawMoon(gl);
+	    	
+	    	float ambientLight[] = {0.2f, 0.2f, 0.2f, 1.0f}; // ambient light property
+			float diffuseLight[] = {1.0f, 1.0f, 1.0f, 1.0f};
+			float ligthtPosition_0[] = {0, 0, 0, 1}; // light position
+			
+			gl.glEnable(GL2.GL_LIGHTING); // enable lighting
+		    gl.glEnable(GL2.GL_LIGHT0); // enable light0
+			gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_DIFFUSE, ambientLight, 0);
+			gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_AMBIENT, diffuseLight, 0); // set light0 as diffuse light with related property
+			gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_POSITION, ligthtPosition_0, 0); // set light0 position
 	    	
 	    	gl.glFlush();
 	    	
