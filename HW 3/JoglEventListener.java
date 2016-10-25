@@ -32,7 +32,8 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	float focalLength = 15.0f;
 	
 	//angle of rotation
-	float rotateAngle = 0.0f; // 
+	float rotateAngleX = 0.0f; // 
+	float rotateAngleY = 0.0f;
 
 	//diffuse light color variables
 	float dlr = 0.0f;
@@ -67,7 +68,7 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	float whiteMoonColor [] = {254.0f/255.0f, 252.0f/255.0f, 215.0f/255.0f};
 	float whiteMoonColorDark [] = {204.0f/255.0f, 202.0f/255.0f, 165.0f/255.0f};
 	
-	float blackShadowColor [] = {0.05f, 0.05f, 0.05f};
+	float blackShadowColor [] = {0.0f, 0.0f, 0.0f};
 	
 	int globalRotation = 0;
 	float rotateMoon = 0.0f;
@@ -79,13 +80,15 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	
 	float blankMaterial[]     = { 0.0f, 0.0f, 0.0f }; //set the material to black
 	float grayMaterial[]     = { 0.7f, 0.7f, 0.7f }; //set the material to gray
-	float mShininess[]        = { 10 }; //set the shininess of the material
+	float mShininess[]        = { 4 }; //set the shininess of the material
 
 	
 	
 	boolean diffuse_flag  = false;
 	boolean specular_flag = false;
 	boolean animationBool = true;
+	boolean leftDown = false;
+	boolean rightDown = false;
 	
 	boolean smooth_flag = true;
 
@@ -103,60 +106,68 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_SHININESS, mSunShininess, 0);	
 		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_DIFFUSE, yellowSunColor, 0);
 			
+		//draw sphere at origin
 		glut.glutSolidSphere(1, 360, 360);
 	}
 	
 	public void drawEarth(final GL2 gl){	
+		//push matrix to keep origin coords
 		gl.glPushMatrix();
-		//System.out.printf("%f\n",globalRotation);
+		
+		//determine earth coords in space
 		earthXCoord = (float) (5.0f * Math.cos(globalRotation));
 		earthYCoord = (float) (Math.sin(12.0f));
-		//System.out.printf("%f\n",earthXCoord);
 		
+		//put earth in its proper position in the world
 		gl.glRotatef(12.0f, 1.0f, 0.0f, 0.0f);
 		gl.glRotatef(globalRotation, 0.0f, 1.0f, 0.0f);
 		gl.glTranslatef(5.0f, 0.0f, 0.0f);
 		
-		// set the material property
+		// set the earths material properties
 		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_AMBIENT, blackShadowColor, 0);
 		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_SPECULAR, blueEarthColor, 0);
 		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_SHININESS, mShininess, 0);	
 		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_DIFFUSE, blueEarthColor, 0);
-		gl.glColorMaterial(gl.GL_FRONT, gl.GL_DIFFUSE);
-		gl.glEnable(gl.GL_COLOR_MATERIAL);
 		
+		//draw the earth it its current coordinates
 		glut.glutSolidSphere(1.0f/3.0f, 360, 360);
 		
+		//return to the origin
 		gl.glPopMatrix();
 		
 	}
 	
 	public void drawMoon(final GL2 gl){
+		//push matrix to keep origin coords
 		gl.glPushMatrix();
 		
+		//go to earths position in space
 		gl.glRotatef(12.0f, 1.0f, 0.0f, 0.0f);
 		gl.glRotatef(globalRotation, 0.0f, 1.0f, 0.0f);
 		gl.glTranslatef(5.0f, 0.0f, 0.0f);
 		
+		//for some reason earthXCoord alternates between negative an positive
+		//this ensures it doesn't do anything dumb
 		if (earthXCoord < 0.0f)
 		{
 			earthXCoord = earthXCoord * -1.0f;
 		}
 		
+		//put moon in proper place relative to earth
 		gl.glRotatef(12.0f, earthXCoord, 0.0f, 0.0f);
-		gl.glRotatef (globalRotation, 0.0f, earthXCoord, 0.0f);
+		gl.glRotatef (globalRotation*2.0f, 0.0f, earthXCoord, 0.0f);
 		gl.glTranslatef(1.0f, 0.0f, 0.0f);
 		
-		// set the material property
+		// set the moon's material property
 		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_AMBIENT, blackShadowColor, 0);
 		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_SPECULAR, whiteMoonColor, 0);
 		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_SHININESS, mShininess, 0);	
 		gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_DIFFUSE, whiteMoonColor, 0);
-		gl.glColorMaterial(gl.GL_FRONT, gl.GL_DIFFUSE);
-		gl.glEnable(gl.GL_COLOR_MATERIAL);
 		
+		//draw the moon
 		glut.glutSolidSphere(1.0f/9.0f, 360, 360);
 		
+		//return to origin for next draw state
 		gl.glPopMatrix();
 		
 	}
@@ -177,12 +188,11 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	        gl.glEnable(GL.GL_DEPTH_TEST);              // Enables Depth Testing
 	        gl.glDepthFunc(GL.GL_LEQUAL);               // The Type Of Depth Testing To Do
 	        // Really Nice Perspective Calculations
-	        //gl.glHint(GL.GL_PERSPECTIVE_CORRECTION_HINT, GL.GL_NICEST);
+	        //gl.glHint(GL2.GL_PERSPECTIVE_CORRECTION_HINT, GL2.GL_NICEST);
 	        
-	        //gl.glEnable(GL2.GL_LIGHTING); // enable lighting
+	        gl.glEnable(GL2.GL_LIGHTING); // enable lighting
+	        gl.glEnable(GL2.GL_LIGHT0); // enable light0
 	        
-	        //gl.glEnable(GL2.GL_LIGHT0); // enable light0
-	       // gl.glEnable(GL2.GL_LIGHT1); 
 	        gl.glMatrixMode(GL2.GL_MODELVIEW);
 	        gl.glLoadIdentity();
 	        
@@ -222,10 +232,11 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	    	gl.glMatrixMode(GL2.GL_MODELVIEW);
 	    	gl.glLoadIdentity();
 	    	
+	    	//only advance rotation num if animation is on
 	    	if (animationBool)
 	    	{
 			
-				globalRotation += 5;
+				globalRotation += 3;
 				
 				if (globalRotation >= 360)
 				{
@@ -236,7 +247,8 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			
 			glu.gluLookAt(0.0, 0.0, focalLength, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0); // eye point, x, y, z, looking at x, y, z, Up direction 
 	    	
-			gl.glRotatef(rotateAngle, 0.0f, 1.0f, 0.0f);
+			gl.glRotatef(rotateAngleX, 0.0f, 1.0f, 0.0f);
+			gl.glRotatef(rotateAngleY, 1.0f, 0.0f, 0.0f);
 			
 			
 			drawSun(gl);
@@ -245,14 +257,12 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	    	
 	    	drawMoon(gl);
 	    	
-	    	float ambientLight[] = {0.2f, 0.2f, 0.2f, 1.0f}; // ambient light property
-			float diffuseLight[] = {1.0f, 1.0f, 1.0f, 1.0f};
+	    	float ambientLight[] = {1.0f, 1.0f, 1.0f, 1.0f}; // ambient light property
+			float diffuseLight[] = {0.2f, 0.2f, 0.2f, 1.0f};
 			float ligthtPosition_0[] = {0, 0, 0, 1}; // light position
 			
-			gl.glEnable(GL2.GL_LIGHTING); // enable lighting
-		    gl.glEnable(GL2.GL_LIGHT0); // enable light0
-			gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_DIFFUSE, ambientLight, 0);
-			gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_AMBIENT, diffuseLight, 0); // set light0 as diffuse light with related property
+			gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_AMBIENT, ambientLight, 0);
+			gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_DIFFUSE, diffuseLight, 0); // set light0 as diffuse light with related property
 			gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_POSITION, ligthtPosition_0, 0); // set light0 position
 	    	
 	    	gl.glFlush();
@@ -273,28 +283,6 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			
 			switch(key)
 			{
-			case 'r':
-				rotateAngle += 5.0f;
-				if(rotateAngle >= 360.0f)
-					rotateAngle -= 360.0f;
-				break;
-			case 'R':
-				rotateAngle -= 5.0f;
-				if(rotateAngle <= 0)
-					rotateAngle += 360;
-				break;
-				
-
-			case 'g':
-			case 'G':
-				focalLength += 1;
-				
-				break;
-				
-			case 'h':
-			case 'H':
-				focalLength -= 1;
-				
 			case 't':
 				if (animationBool == true)
 				{
@@ -324,9 +312,6 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			default:
 				
 				break;
-			
-			
-			
 			}
 			
 		}
@@ -356,34 +341,49 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			mouseXF = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
 			mouseYF = -(e.getY()-windowHeight*0.5f)*orthoX/windowWidth;
 			
-			if(e.getButton() == MouseEvent.BUTTON1)
+			// rotation calls for left click
+			if(leftDown)
 			{
 				if (distanceChangedX > 0)
 				{
-					rotateAngle += 10.0f;
-					if(rotateAngle >= 360.0f)
-						rotateAngle -= 360.0f;
+					rotateAngleX += 5.0f;
+					if(rotateAngleX >= 360.0f)
+						rotateAngleX -= 360.0f;
 				}
 				
 				else if (distanceChangedX < 0)
 				{
-					rotateAngle -= 10.0f;
-					if(rotateAngle <= 0)
-						rotateAngle += 360;
+					rotateAngleX -= 5.0f;
+					if(rotateAngleX <= 0)
+						rotateAngleX += 360;
 				}
-			}
-			
-			
-			if(e.getButton() == MouseEvent.BUTTON2)
-			{
+				
 				if (distanceChangedY > 0)
 				{
-					focalLength += 1;
+					rotateAngleY += 5.0f;
+					if(rotateAngleY >= 360.0f)
+						rotateAngleY -= 360.0f;
 				}
 				
 				else if (distanceChangedY < 0)
 				{
+					rotateAngleY -= 5.0f;
+					if(rotateAngleY <= 0)
+						rotateAngleY += 360;
+				}
+			}
+			
+			// zoom calls for right click
+			else if(rightDown)
+			{
+				if (distanceChangedY > 0)
+				{
 					focalLength -= 1;
+				}
+				
+				else if (distanceChangedY < 0)
+				{
+					focalLength += 1;
 				}
 			}
 			
@@ -421,10 +421,15 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			
 			if(e.getButton()==MouseEvent.BUTTON1) {	// Left button
 				
+				leftDown = true;
+				rightDown = false;
+				
 				
 			}
 			else if(e.getButton()==MouseEvent.BUTTON3) {	// Right button
 				
+				leftDown = false;
+				rightDown = true;
 			}
 		}
 
