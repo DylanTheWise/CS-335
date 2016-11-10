@@ -1,106 +1,69 @@
-package main;
+package helloOpenGL;
 
+import java.io.File;
 
+import com.jogamp.opengl.glu.GLU;
+import com.jogamp.opengl.util.texture.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.awt.image.BufferedImage;
-import java.nio.IntBuffer;
 
 import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GL2ES3;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLEventListener;
-import com.jogamp.opengl.fixedfunc.GLMatrixFunc;
-import com.jogamp.opengl.glu.GLU;
-import com.jogamp.opengl.util.gl2.GLUT;
 
 
 public class JoglEventListener implements GLEventListener, KeyListener, MouseListener, MouseMotionListener {
 	
-	
 	float backrgb[] = new float[4]; 
-
-	int windowWidth, windowHeight;
-	float orthoX=40;
-
+	float rot = 0.3f; 
+	
 	int mouseX0, mouseY0;	
 	float XX = 0.0f, YY = 0.0f;
+	float mouseXF = 0.0f, mouseYF = 0.0f;
+	int windowWidth, windowHeight;
+	float orthoX = 40;
 	
-	float focalLength = 15.0f;
+	float currentX = 0;
+	float currentY = 0;
+	float currentZ = 3;
 	
-	//angle of rotation
-	float rotateAngleX = 0.0f; // 
+	Texture mytexRight = null;
+	Texture mytexLeft = null;
+	Texture mytexTop = null; 
+	Texture mytexBottom = null; 
+	Texture mytexBack = null; 
+	Texture mytexFront = null; 
+	Texture mytexBox = null;
+	Texture mytexMap = null;
+	
+	int texIDRight;
+	int texIDLeft;
+	int texIDTop;
+	int texIDBottom;
+	int texIDBack;
+	int texIDFront;
+	int texIDBox;
+	int texIDMap;
+	
+	float xTrans = 0.0f;
+	float yTrans = 0.0f;
+	
+	float rotateAngleX = 0.0f;
 	float rotateAngleY = 0.0f;
+	
+	//Texture mytex2 = null; 
+	int skyBoxIDBuffer;
 
-	//diffuse light color variables
-	float dlr = 0.0f;
-	float dlg = 0.0f;
-	float dlb = 0.0f;
-	float dlw = 1.0f;
-
-	//ambient light color variables
-	float alr = 1.0f;
-	float alg = 1.0f;
-	float alb = 1.0f;
-
-	//light position variables
-	float lx_0 = 0.0f;
-	float ly_0 = 0.0f;
-	float lz_0 = 0.0f; // light0 is at z = 10.0f
-	float lw_0 = 1.0f;
-	
-	IntBuffer skyBoxIDBuffer = (IntBuffer.allocate(10));
-	
-	
-	int[] Intbuffer = new int[10];
-	String[] textureNames = {"right.jpg", "left.jpg", "top.jpg", "bottom.jpg", "back.jpg", "front.jpg"};
-	/*** Define material property  ***/ 
-	
-	float redDiffuseMaterial []    = { 1.0f, 0.0f, 0.0f }; //set the material to red
-	float whiteSpecularMaterial [] = { 1.0f, 1.0f, 1.0f }; //set the material to white
-	float greenEmissiveMaterial [] = { 0.0f, 1.0f, 0.0f }; //set the material to green
-	float whiteSpecularLight []    = { 1.0f, 1.0f, 1.0f }; //set the light specular to white
-	
-	float yellowSunColor [] = {1.0f, 1.0f, 0.0f};
-	
-	float blueEarthColor [] = { 30.0f/255.0f, 144.0f/255.0f, 255.0f/255.0f };
-	float blueEarthColorDark [] = { 0.0f, 114.0f/255.0f, 225.0f/255.0f };
-	
-	float whiteMoonColor [] = {254.0f/255.0f, 252.0f/255.0f, 215.0f/255.0f};
-	float whiteMoonColorDark [] = {204.0f/255.0f, 202.0f/255.0f, 165.0f/255.0f};
-	
-	float blackShadowColor [] = {0.0f, 0.0f, 0.0f};
-	
-	int globalRotation = 0;
-	float rotateMoon = 0.0f;
-	float earthXCoord = 0.0f;
-	float earthYCoord = 0.0f;
-	float inclinationAngle = 0.0f;
-	float mouseXF, mouseYF;
-	
-	
-	float blankMaterial[]     = { 0.0f, 0.0f, 0.0f }; //set the material to black
-	float grayMaterial[]     = { 0.7f, 0.7f, 0.7f }; //set the material to gray
-	float mShininess[]        = { 4 }; //set the shininess of the material
+    	private GLU glu = new GLU();
 
 	
-	
-	boolean diffuse_flag  = false;
-	boolean specular_flag = false;
-	boolean animationBool = true;
-	boolean leftDown = false;
-	boolean rightDown = false;
-	
-	boolean smooth_flag = true;
-
-    private GLU glu = new GLU();
-	
-    private GLUT glut = new GLUT();
-	    public void displayChanged(GLAutoDrawable gLDrawable, boolean modeChanged, boolean deviceChanged) {
-		 
+	 public void displayChanged(GLAutoDrawable gLDrawable, 
+	            boolean modeChanged, boolean deviceChanged) {
 	    }
 
 	    /** Called by the drawable immediately after the OpenGL context is
@@ -110,41 +73,185 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 	     */
 	    public void init(GLAutoDrawable gLDrawable) {
 	        GL2 gl = gLDrawable.getGL().getGL2();
+	        //gl.glShadeModel(GL.GL_LINE_SMOOTH);              // Enable Smooth Shading
 	        gl.glClearColor(0.0f, 0.0f, 0.0f, 0.5f);    // Black Background
 	        gl.glClearDepth(1.0f);                      // Depth Buffer Setup
 	        gl.glEnable(GL.GL_DEPTH_TEST);              // Enables Depth Testing
-	        gl.glDepthFunc(GL.GL_LEQUAL);               // The Type Of Depth Testing To Do
+	        gl.glDepthFunc(GL.GL_LEQUAL); 
+	        gl.glHint(GL2.GL_PERSPECTIVE_CORRECTION_HINT, GL.GL_NICEST);  
+            gl.glEnable(GL.GL_TEXTURE_2D);
+            glu.gluLookAt(0, 0, 0, 0, 0, 0, 0, 1, 0);
+            
+            // The Type Of Depth Testing To Do
 	        // Really Nice Perspective Calculations
-	        //gl.glHint(GL2.GL_PERSPECTIVE_CORRECTION_HINT, GL2.GL_NICEST);
+	        //gl.glHint(GL.GL_PERSPECTIVE_CORRECTION_HINT, GL.GL_NICEST);  
 	        
-	        gl.glEnable(GL2.GL_LIGHTING); // enable lighting
-	        gl.glEnable(GL2.GL_LIGHT0); // enable light0
+	        // load the texture;
 	        
-	        gl.glMatrixMode(GL2.GL_MODELVIEW);
-	        gl.glLoadIdentity();
+	        try {
+	        	//get all texture files
+	        	 mytexRight = TextureIO.newTexture(new File("C:\\Users\\Dylan\\workspace\\BoxExample\\src\\right.jpg"), false);
+	        	 mytexLeft = TextureIO.newTexture(new File("C:\\Users\\Dylan\\workspace\\BoxExample\\src\\left.jpg"), false);
+	        	 mytexTop = TextureIO.newTexture(new File("C:\\Users\\Dylan\\workspace\\BoxExample\\src\\top.jpg"), false);
+	        	 mytexBottom = TextureIO.newTexture(new File("C:\\Users\\Dylan\\workspace\\BoxExample\\src\\bottom.jpg"), false);
+	        	 mytexBack = TextureIO.newTexture(new File("C:\\Users\\Dylan\\workspace\\BoxExample\\src\\back.jpg"), false);
+	        	 mytexFront = TextureIO.newTexture(new File("C:\\Users\\Dylan\\workspace\\BoxExample\\src\\front.jpg"), false);
+	        	 mytexBox = TextureIO.newTexture(new File("C:\\Users\\Dylan\\workspace\\BoxExample\\src\\box.jpg"), false);
+	        	 mytexMap = TextureIO.newTexture(new File("C:\\Users\\Dylan\\workspace\\BoxExample\\src\\dust2.png"), false);
+	        	 
+	        	 //make IDs for all textures
+	        	 texIDRight = mytexRight.getTextureObject();
+	        	 texIDLeft = mytexLeft.getTextureObject();
+	        	 texIDTop = mytexTop.getTextureObject();
+	        	 texIDBottom = mytexBottom.getTextureObject();
+	        	 texIDBack = mytexBack.getTextureObject();
+	        	 texIDFront = mytexFront.getTextureObject();
+	        	 texIDBox = mytexBox.getTextureObject();
+	        	 texIDMap = mytexMap.getTextureObject();
+
+	         	 gl.glTexParameteri(GL2.GL_TEXTURE_CUBE_MAP, GL2.GL_TEXTURE_MAG_FILTER, GL2.GL_LINEAR);
+	         	 gl.glTexParameteri(GL2.GL_TEXTURE_CUBE_MAP, GL2.GL_TEXTURE_MIN_FILTER, GL2.GL_LINEAR);
+	         	 gl.glTexParameteri(GL2.GL_TEXTURE_CUBE_MAP, GL2.GL_TEXTURE_WRAP_S, GL2.GL_CLAMP_TO_EDGE);
+	         	 gl.glTexParameteri(GL2.GL_TEXTURE_CUBE_MAP, GL2.GL_TEXTURE_WRAP_T, GL2.GL_CLAMP_TO_EDGE);
+	         	 gl.glTexParameteri(GL2.GL_TEXTURE_CUBE_MAP, GL2.GL_TEXTURE_WRAP_R, GL2.GL_CLAMP_TO_EDGE);
+	         	 
+	             
+	             
+	        } catch (Exception ex) {
+	            ex.printStackTrace();
+	        }
+
+	       
+	    }
+	    
+	    public void DrawBox(final GL2 gl)
+	    {
+	    	
+	    	//draw crate in
+	    	gl.glTranslatef(0.0f, 0.0f, -3.0f);
+	        gl.glBindTexture(GL.GL_TEXTURE_2D, texIDBox);
+	        gl.glBegin(GL2ES3.GL_QUADS);
+	            gl.glTexCoord2f(1, 0); gl.glVertex3f(  0.5f, -0.5f, -0.5f );
+	            gl.glTexCoord2f(0, 0); gl.glVertex3f( -0.5f, -0.5f, -0.5f );
+	            gl.glTexCoord2f(0, 1); gl.glVertex3f( -0.5f,  0.5f, -0.5f );
+	            gl.glTexCoord2f(1, 1); gl.glVertex3f(  0.5f,  0.5f, -0.5f );
+	        gl.glEnd();
 	        
+	        gl.glBindTexture(GL.GL_TEXTURE_2D, texIDBox);
+	        gl.glBegin(GL2ES3.GL_QUADS);
+		        gl.glTexCoord2f(1, 0); gl.glVertex3f( -0.5f, -0.5f, -0.5f );
+	            gl.glTexCoord2f(0, 0); gl.glVertex3f( -0.5f, -0.5f,  0.5f );
+	            gl.glTexCoord2f(0, 1); gl.glVertex3f( -0.5f,  0.5f,  0.5f );
+	            gl.glTexCoord2f(1, 1); gl.glVertex3f( -0.5f,  0.5f, -0.5f );
+	        gl.glEnd();
 	        
+	        gl.glBindTexture(GL.GL_TEXTURE_2D, texIDBox);
+	        gl.glBegin(GL2ES3.GL_QUADS);
+	            gl.glTexCoord2f(1, 0); gl.glVertex3f(  0.5f, -0.5f,  0.5f );
+	            gl.glTexCoord2f(0, 0); gl.glVertex3f(  0.5f, -0.5f, -0.5f );
+	            gl.glTexCoord2f(0, 1); gl.glVertex3f(  0.5f,  0.5f, -0.5f );
+	            gl.glTexCoord2f(1, 1); gl.glVertex3f(  0.5f,  0.5f,  0.5f );
+	        gl.glEnd();
 	        
+	        gl.glBindTexture(GL.GL_TEXTURE_2D, texIDBox);
+	        gl.glBegin(GL2ES3.GL_QUADS);
+	            gl.glTexCoord2f(1, 0); gl.glVertex3f( -0.5f, -0.5f,  0.5f );
+	            gl.glTexCoord2f(0, 0); gl.glVertex3f(  0.5f, -0.5f,  0.5f );
+	            gl.glTexCoord2f(0, 1); gl.glVertex3f(  0.5f,  0.5f,  0.5f );
+	            gl.glTexCoord2f(1, 1); gl.glVertex3f( -0.5f,  0.5f,  0.5f );
+	        gl.glEnd();
+	        
+	        gl.glBindTexture(GL.GL_TEXTURE_2D, texIDBox);
+	        gl.glBegin(GL2ES3.GL_QUADS);
+	            gl.glTexCoord2f(1, 0); gl.glVertex3f(  0.5f,  0.5f, -0.5f );
+	            gl.glTexCoord2f(0, 0); gl.glVertex3f( -0.5f,  0.5f, -0.5f );
+	            gl.glTexCoord2f(0, 1); gl.glVertex3f( -0.5f,  0.5f,  0.5f );
+	            gl.glTexCoord2f(1, 1); gl.glVertex3f(  0.5f,  0.5f,  0.5f );
+	        gl.glEnd();
+	        
+	        gl.glBindTexture(GL.GL_TEXTURE_2D, texIDBox);
+	        gl.glBegin(GL2ES3.GL_QUADS);
+	            gl.glTexCoord2f(1, 0); gl.glVertex3f(  0.5f, -0.5f,  0.5f );
+	            gl.glTexCoord2f(0, 0); gl.glVertex3f( -0.5f, -0.5f,  0.5f );
+	            gl.glTexCoord2f(0, 1); gl.glVertex3f( -0.5f, -0.5f, -0.5f );
+	            gl.glTexCoord2f(1, 1); gl.glVertex3f(  0.5f, -0.5f, -0.5f );
+	        gl.glEnd();
+
 	    }
 
+	    public void DrawSkyBox(final GL2 gl)
+	    {
+	    	//bind textures and draw the sides of the box, this will also follow the cameras movements
+	        gl.glBindTexture(GL.GL_TEXTURE_2D, texIDFront);
+	        gl.glBegin(GL2ES3.GL_QUADS);
+	            gl.glTexCoord2f(1, 0); gl.glVertex3f(  150.0f + currentY*-1, -150.0f, -150.0f + currentX*-1);
+	            gl.glTexCoord2f(0, 0); gl.glVertex3f( -150.0f + currentY*-1, -150.0f, -150.0f + currentX*-1);
+	            gl.glTexCoord2f(0, 1); gl.glVertex3f( -150.0f + currentY*-1,  150.0f, -150.0f + currentX*-1);
+	            gl.glTexCoord2f(1, 1); gl.glVertex3f(  150.0f + currentY*-1,  150.0f, -150.0f + currentX*-1);
+	        gl.glEnd();
+	        
+	        gl.glBindTexture(GL.GL_TEXTURE_2D, texIDLeft);
+	        gl.glBegin(GL2ES3.GL_QUADS);
+		        gl.glTexCoord2f(1, 0); gl.glVertex3f( -150.0f + currentY*-1, -150.0f, -150.0f + currentX*-1);
+	            gl.glTexCoord2f(0, 0); gl.glVertex3f( -150.0f + currentY*-1, -150.0f,  150.0f + currentX*-1);
+	            gl.glTexCoord2f(0, 1); gl.glVertex3f( -150.0f + currentY*-1,  150.0f,  150.0f + currentX*-1);
+	            gl.glTexCoord2f(1, 1); gl.glVertex3f( -150.0f + currentY*-1,  150.0f, -150.0f + currentX*-1);
+	        gl.glEnd();
+	        
+	        gl.glBindTexture(GL.GL_TEXTURE_2D, texIDRight);
+	        gl.glBegin(GL2ES3.GL_QUADS);
+	            gl.glTexCoord2f(1, 0); gl.glVertex3f(  150.0f + currentY*-1, -150.0f,  150.0f + currentX*-1);
+	            gl.glTexCoord2f(0, 0); gl.glVertex3f(  150.0f + currentY*-1, -150.0f, -150.0f + currentX*-1);
+	            gl.glTexCoord2f(0, 1); gl.glVertex3f(  150.0f + currentY*-1,  150.0f, -150.0f + currentX*-1);
+	            gl.glTexCoord2f(1, 1); gl.glVertex3f(  150.0f + currentY*-1,  150.0f,  150.0f + currentX*-1);
+	        gl.glEnd();
+	        
+	        gl.glBindTexture(GL.GL_TEXTURE_2D, texIDBack);
+	        gl.glBegin(GL2ES3.GL_QUADS);
+	            gl.glTexCoord2f(1, 0); gl.glVertex3f( -150.0f + currentY*-1, -150.0f,  150.0f + currentX*-1);
+	            gl.glTexCoord2f(0, 0); gl.glVertex3f(  150.0f + currentY*-1, -150.0f,  150.0f + currentX*-1);
+	            gl.glTexCoord2f(0, 1); gl.glVertex3f(  150.0f + currentY*-1,  150.0f,  150.0f + currentX*-1);
+	            gl.glTexCoord2f(1, 1); gl.glVertex3f( -150.0f + currentY*-1,  150.0f,  150.0f + currentX*-1);
+	        gl.glEnd();
+	        
+	        gl.glBindTexture(GL.GL_TEXTURE_2D, texIDTop);
+	        gl.glBegin(GL2ES3.GL_QUADS);
+	            gl.glTexCoord2f(1, 0); gl.glVertex3f(  150.0f + currentY*-1,  150.0f, -150.0f + currentX*-1);
+	            gl.glTexCoord2f(0, 0); gl.glVertex3f( -150.0f + currentY*-1,  150.0f, -150.0f + currentX*-1);
+	            gl.glTexCoord2f(0, 1); gl.glVertex3f( -150.0f + currentY*-1,  150.0f,  150.0f + currentX*-1);
+	            gl.glTexCoord2f(1, 1); gl.glVertex3f(  150.0f + currentY*-1,  150.0f,  150.0f + currentX*-1);
+	        gl.glEnd();
+	        
+	        gl.glBindTexture(GL.GL_TEXTURE_2D, texIDBottom);
+	        gl.glBegin(GL2ES3.GL_QUADS);
+	            gl.glTexCoord2f(1, 0); gl.glVertex3f(  150.0f + currentY*-1, -150.0f,  150.0f + currentX*-1);
+	            gl.glTexCoord2f(0, 0); gl.glVertex3f( -150.0f + currentY*-1, -150.0f,  150.0f + currentX*-1);
+	            gl.glTexCoord2f(0, 1); gl.glVertex3f( -150.0f + currentY*-1, -150.0f, -150.0f + currentX*-1);
+	            gl.glTexCoord2f(1, 1); gl.glVertex3f(  150.0f + currentY*-1, -150.0f, -150.0f + currentX*-1);
+	        gl.glEnd();
 
+	    }
 	    
-	    public void reshape(GLAutoDrawable gLDrawable, int x, int y, int width, int height) {
-	    	windowWidth = width;
-	    	windowHeight = height;
+	    public void reshape(GLAutoDrawable gLDrawable, int x, int y, int width, 
+	            int height) {
 	        final GL2 gl = gLDrawable.getGL().getGL2();
+	        
+	        windowWidth = width;
+	    	windowHeight = height;
 
 	        if (height <= 0) // avoid a divide by zero error!
 	            height = 1;
 	        final float h = (float) width / (float) height;
-	        gl.glViewport(0, 0, width, height);
+	        gl.glViewport(width/2*0, 0, width, height);
 	        gl.glMatrixMode(GL2.GL_PROJECTION);
 	        gl.glLoadIdentity();
-	       // gl.glOrtho(-orthoX*0.5, orthoX*0.5, -orthoX*0.5*height/width, orthoX*0.5*height/width, -100, 100);
-	        glu.gluPerspective(45.0f, h, 1, 100000.0);
-
+	        glu.gluPerspective(45.0f, h, 1.0, 1000.0);
+	        
+	        gl.glMatrixMode(GL2.GL_MODELVIEW);
+	        
+	        gl.glLoadIdentity();
+	     
 	    }
-	    
 	    
 
 		@Override
@@ -152,46 +259,47 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			// TODO Auto-generated method stub
 			final GL2 gl = gLDrawable.getGL().getGL2();
 
-			gl.glClearColor(0, 0, 0, 1);
+			gl.glClearColor(backrgb[0]+0.5f, 0+0.5f, 0.5f, 1);
 			gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
-		
 			
-	    	gl.glMatrixMode(GL2.GL_MODELVIEW);
-	    	gl.glLoadIdentity();
-	    	
-	    	//only advance rotation num if animation is on
-//	    	if (animationBool)
-//	    	{
-//			
-//				globalRotation += 3;
-//				
-//				if (globalRotation >= 360)
-//				{
-//					globalRotation = 0;
-//				}
-//	    	}
+			//backrgb[0]+=0.0005;
+			if (backrgb[0]> 1) backrgb[0] = 0; 
 			
-			glu.gluLookAt(0.0, 0.0, focalLength, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0); // eye point, x, y, z, looking at x, y, z, Up direction 
-	    	
-			//gl.glRotatef(rotateAngleX, 0.0f, 1.0f, 0.0f);
-			//gl.glRotatef(rotateAngleY, 1.0f, 0.0f, 0.0f);
+			//handle translation
+			if (xTrans != 0.0f || yTrans != 0.0f)
+			{
+				gl.glTranslatef(yTrans, 0.0f, xTrans);
+				xTrans = 0;
+				yTrans = 0;
+			}
 
+			//handle rotation
+			if (rotateAngleX != 0.0f || rotateAngleY != 0.0f)
+			{
+				gl.glRotatef(-rotateAngleX, 0.0f, currentX, 0.0f);
+				gl.glRotatef(-rotateAngleY, currentY, 0.0f, 0.0f);
+				
+				rotateAngleX = 0.0f;
+				rotateAngleY = 0.0f;
+			}
 			
-			gl.glGenTextures(1, skyBoxIDBuffer);
-			gl.glActiveTexture(GL2.GL_TEXTURE0);
+			gl.glPopMatrix();
+			
+			gl.glPushMatrix();
+			
+			gl.glDrawArrays(GL2.GL_TRIANGLES, 0, 36);
+			gl.glBindVertexArray(0);
 			
 			
-			
-	    	float ambientLight[] = {1.0f, 1.0f, 1.0f, 1.0f}; // ambient light property
-			float diffuseLight[] = {0.2f, 0.2f, 0.2f, 1.0f};
-			float ligthtPosition_0[] = {0, 0, 0, 1}; // light position
-			
-			gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_AMBIENT, ambientLight, 0);
-			gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_DIFFUSE, diffuseLight, 0); // set light0 as diffuse light with related property
-			gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_POSITION, ligthtPosition_0, 0); // set light0 position
-	    	
-	    	gl.glFlush();
-	    	
+			//draw skybox
+			DrawSkyBox(gl);
+	        gl.glPopMatrix();
+	        
+	        //draw crate
+	        gl.glPushMatrix();
+	        DrawBox(gl);
+	        gl.glPopMatrix();
+	        
 		}
 
 		@Override
@@ -199,39 +307,33 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			// TODO Auto-generated method stub
 			
 		}
-
+		
 		@Override
 		public void keyTyped(KeyEvent e) {
 			// TODO Auto-generated method stub
-		    char key= e.getKeyChar();
+		    char key = e.getKeyChar();
 			System.out.printf("Key typed: %c\n", key); 
 			
 			switch(key)
 			{
-			case 't':
-				if (animationBool == true)
-				{
-					animationBool = false;
-				}
-				
-				else if (animationBool == false)
-				{
-					animationBool = true;
-				}
-				
+			case 'w':
+				xTrans += 0.1f;
+				currentX += 0.1f;
 				break;
 				
-			case 'T':
-				if (animationBool == true)
-				{
-					animationBool = false;
-				}
+			case 'a':
+				yTrans += 0.1f;
+				currentY += 0.1f;
+				break;
+			
+			case 's':
+				xTrans -= 0.1f;
+				currentX -= 0.1f;
+				break;
 				
-				else if (animationBool == false)
-				{
-					animationBool = true;
-				}
-				
+			case 'd':
+				yTrans -= 0.1f;
+				currentY -= 0.1f;
 				break;
 				
 			default:
@@ -242,20 +344,8 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 		}
 
 		@Override
-		public void keyPressed(KeyEvent e) {
-			// TODO Auto-generated method stub
-			
-			
-		}
-
-		@Override
-		public void keyReleased(KeyEvent e) {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
 		public void mouseDragged(MouseEvent e) {
+			// TODO Auto-generated method stub
 			
 			float XX = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
 			float YY = -(e.getY()-windowHeight*0.5f)*orthoX/windowHeight;
@@ -267,72 +357,56 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			mouseYF = -(e.getY()-windowHeight*0.5f)*orthoX/windowWidth;
 			
 			// rotation calls for left click
-			if(leftDown)
+
+			if (distanceChangedX > 0)
 			{
-				if (distanceChangedX > 0)
-				{
-					rotateAngleX += 5.0f;
-					if(rotateAngleX >= 360.0f)
-						rotateAngleX -= 360.0f;
-				}
-				
-				else if (distanceChangedX < 0)
-				{
-					rotateAngleX -= 5.0f;
-					if(rotateAngleX <= 0)
-						rotateAngleX += 360;
-				}
-				
-				if (distanceChangedY > 0)
-				{
-					rotateAngleY += 5.0f;
-					if(rotateAngleY >= 360.0f)
-						rotateAngleY -= 360.0f;
-				}
-				
-				else if (distanceChangedY < 0)
-				{
-					rotateAngleY -= 5.0f;
-					if(rotateAngleY <= 0)
-						rotateAngleY += 360;
-				}
+				rotateAngleX += 1.0f;
 			}
 			
-			// zoom calls for right click
-			else if(rightDown)
+			else if (distanceChangedX < 0)
 			{
-				if (distanceChangedY > 0)
-				{
-					focalLength -= 1;
-				}
-				
-				else if (distanceChangedY < 0)
-				{
-					focalLength += 1;
-				}
+				rotateAngleX -= 1.0f;
 			}
 			
+			if (distanceChangedY > 0)
+			{
+				rotateAngleY += 1.0f;
+			}
 			
+			else if (distanceChangedY < 0)
+			{
+				rotateAngleY -= 1.0f;
+			}
 		}
-		
+
 		@Override
-		public void mouseMoved(MouseEvent e) {
+		public void mouseMoved(MouseEvent arg0) {
 			// TODO Auto-generated method stub
 			
 		}
 
 		@Override
-		public void mouseClicked(MouseEvent e) {
+		public void mouseClicked(MouseEvent arg0) {
 			// TODO Auto-generated method stub
-			System.out.println("Your window get focus."); 
+			
+		}
+
+		@Override
+		public void mouseEntered(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseExited(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
 		}
 
 		@Override
 		public void mousePressed(MouseEvent e) {
 			// TODO Auto-generated method stub
-			/*
-			 * Coordinates printout
-			 */
+			
 			XX = (e.getX()-windowWidth*0.5f)*orthoX/windowWidth;
 			YY = -(e.getY()-windowHeight*0.5f)*orthoX/windowHeight;
 			
@@ -344,39 +418,37 @@ public class JoglEventListener implements GLEventListener, KeyListener, MouseLis
 			mouseXF = XX;
 			mouseYF = YY;
 			
-			if(e.getButton()==MouseEvent.BUTTON1) {	// Left button
-				
-				leftDown = true;
-				rightDown = false;
-				
-				
-			}
-			else if(e.getButton()==MouseEvent.BUTTON3) {	// Right button
-				
-				leftDown = false;
-				rightDown = true;
-			}
 		}
 
 		@Override
-		public void mouseReleased(MouseEvent e) {
-			// TODO Auto-generated method stub
-			
-			
-		}
-
-		@Override
-		public void mouseEntered(MouseEvent e) { // cursor enter the window
+		public void mouseReleased(MouseEvent arg0) {
 			// TODO Auto-generated method stub
 			
 		}
 
 		@Override
-		public void mouseExited(MouseEvent e) { // cursor exit the window
+		public void keyPressed(KeyEvent arg0) {
 			// TODO Auto-generated method stub
 			
 		}
 
+		@Override
+		public void keyReleased(KeyEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
 
+		
+	  /*  
+	public void init(GLDrawable gLDrawable) {
+		final GL gl = glDrawable.getGL();
+        final GLU glu = glDrawable.getGLU();
+
+        gl.glMatrixMode(GL.GL_PROJECTION);
+        gl.glLoadIdentity();
+        glu.gluOrtho2D(-1.0f, 1.0f, -1.0f, 1.0f); // drawing square
+        gl.glMatrixMode(GL.GL_MODELVIEW);
+        gl.glLoadIdentity();
+    }*/
 	
 }

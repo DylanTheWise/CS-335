@@ -1,4 +1,4 @@
-package main;
+package helloOpenGL;
 
 import java.awt.BorderLayout;
 import java.awt.Frame;
@@ -13,7 +13,7 @@ import java.awt.event.WindowEvent;
 
 
 
-public class EntryClass extends Frame {
+public class HelloOpenGL extends Frame {
 
 	static Animator anim = null;
 	
@@ -37,7 +37,7 @@ public class EntryClass extends Frame {
 
 	}
 	
-    public EntryClass() {
+    public HelloOpenGL() {
         super("Class Demo");
 
         setLayout(new BorderLayout());
@@ -62,7 +62,7 @@ public class EntryClass extends Frame {
     }
 
     public static void main(String[] args) {
-    	EntryClass demo = new EntryClass();
+    	HelloOpenGL demo = new HelloOpenGL();
 
         demo.setVisible(true);
     }
